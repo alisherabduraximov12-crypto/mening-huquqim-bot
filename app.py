@@ -5,6 +5,7 @@ from flask import Flask, request
 app = Flask(__name__)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
+RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL")
 
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN topilmadi")
@@ -29,6 +30,22 @@ def send_message(chat_id, text, keyboard=None):
         }
 
     return telegram("sendMessage", data)
+
+
+def set_webhook():
+    if not RENDER_URL:
+        return
+
+    webhook_url = f"{RENDER_URL}/webhook"
+
+    result = telegram(
+        "setWebhook",
+        {
+            "url": webhook_url
+        }
+    )
+
+    print("Webhook:", result)
 
 
 @app.route("/", methods=["GET"])
@@ -81,7 +98,7 @@ def webhook():
         send_message(
             chat_id,
             "💰 Pulni qaytarish bo‘yicha yordam.\n\n"
-            "Avvalo mahsulot yoki xizmat bilan bog‘liq muammoingizni batafsil yozing."
+            "Mahsulot yoki xizmat bilan bog‘liq muammoingizni batafsil yozing."
         )
 
     elif text == "🛠 Kafolat":
@@ -133,5 +150,11 @@ def webhook():
     return "OK"
 
 
+set_webhook()
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 10000))
+    )
